@@ -73,14 +73,6 @@ func newVersionCmd(c helm.Interface, out io.Writer) *cobra.Command {
 			if !version.showClient && !version.showServer {
 				version.showClient, version.showServer = true, true
 			}
-			if version.showServer {
-				// We do this manually instead of in PreRun because we only
-				// need a tunnel if server version is requested.
-				err := setupConnection()
-				if err != nil {
-					return err
-				}
-			}
 			version.client = ensureHelmClient(version.client)
 			return version.run()
 		},
@@ -109,6 +101,12 @@ func (v *versionCmd) run() error {
 
 	if !v.showServer {
 		return tpl(v.template, data, v.out)
+	}
+
+	// We do this manually instead of in PreRun because we only
+	// need a tunnel if server version is requested.
+	if err := setupConnection(); err != nil {
+		return err
 	}
 
 	if settings.Debug {
